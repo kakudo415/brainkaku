@@ -6,11 +6,29 @@ import (
 
 // Token Type
 type Token struct {
-	Kind rune
+	Kind int
 
 	Line   int
 	Column int
 }
+
+// Token Kind
+const (
+	NEXT = iota
+	PREV
+	INCR
+	DECR
+	WRITE
+	READ
+	LOOPS
+	LOOPE
+	// Use when parsing
+	ROOT
+	LOOP
+	// Error
+	EOF
+	INVALID
+)
 
 type status struct {
 	src []byte
@@ -33,31 +51,31 @@ func Lexer(input []byte) []Token {
 		var t Token
 		switch s.current() {
 		case '>':
-			t.Kind = '>'
+			t.Kind = NEXT
 			t.Line, t.Column = s.line, s.column
 		case '<':
-			t.Kind = '<'
+			t.Kind = PREV
 			t.Line, t.Column = s.line, s.column
 		case '+':
-			t.Kind = '+'
+			t.Kind = INCR
 			t.Line, t.Column = s.line, s.column
 		case '-':
-			t.Kind = '-'
+			t.Kind = DECR
 			t.Line, t.Column = s.line, s.column
 		case '.':
-			t.Kind = '.'
+			t.Kind = WRITE
 			t.Line, t.Column = s.line, s.column
 		case ',':
-			t.Kind = ','
+			t.Kind = READ
 			t.Line, t.Column = s.line, s.column
 		case '[':
-			t.Kind = '['
+			t.Kind = LOOPS
 			t.Line, t.Column = s.line, s.column
 		case ']':
-			t.Kind = ']'
+			t.Kind = LOOPE
 			t.Line, t.Column = s.line, s.column
 		default: // INVALID TOKEN
-			t.Kind = '?'
+			t.Kind = INVALID
 			t.Line, t.Column = s.line, s.column
 		}
 

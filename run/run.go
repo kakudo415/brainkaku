@@ -2,63 +2,57 @@ package run
 
 import (
 	"fmt"
-	"os"
 
 	"../lexer"
+	"../parser"
 )
 
-const maxCell = 30000
+const cellMax = 30000
 
-// Run from Tokens
-func Run(ts []lexer.Token) {
-	cells := make([]byte, maxCell)
-	pointer := 0
-	for i := 0; i < len(ts); i++ {
-	START:
-		t := ts[i]
-		if !isInRange(pointer) {
-			continue
-		}
+type status struct {
+	cells   []byte
+	pointer int
+}
 
-		switch t.Kind {
-		case '>':
-			pointer++
-		case '<':
-			pointer--
-		case '+':
-			cells[pointer]++
-		case '-':
-			cells[pointer]--
-		case '.':
-			fmt.Print(string(cells[pointer]))
-		case ',':
-			fmt.Scan(&cells[pointer])
-		case '[':
-			if cells[pointer] == 0 {
-				for li := i; li < len(ts); li++ {
-					if ts[li].Kind == ']' {
-						i = li + 1
-						goto START
-					}
-				}
-				fmt.Fprintf(os.Stderr, `ERROR: 対応する "]" が見つかりませんでした %#v (%d %d)\n`, t.Kind, t.Line, t.Column)
-			}
-		case ']':
-			if cells[pointer] != 0 {
-				for li := i; li > 0; li-- {
-					if ts[li].Kind == '[' {
-						i = li + 1
-						goto START
-					}
-				}
-				fmt.Fprintf(os.Stderr, `ERROR: 対応する "]" が見つかりませんでした %#v (%d %d)\n`, t.Kind, t.Line, t.Column)
-			}
-		default:
-			// fmt.Fprintf(os.Stderr, "WARNING: INVALID TOKEN %#v (%d %d) SKIPPED\n", t.Kind, t.Line, t.Column) // 不正トークン用
+// Run command
+func Run(root *parser.Node) {
+	s := new(status)
+	s.cells = make([]byte, cellMax)
+	s.run(root)
+}
+
+func (s *status) run(node *parser.Node) {
+	if !isInRange(s.pointer) {
+		return
+	}
+	switch t := node.Token; t.Kind {
+	case lexer.ROOT:
+		for _, child := range node.Children {
+			s.run(child)
 		}
+	case lexer.NEXT:
+		s.pointer++
+	case lexer.PREV:
+		s.pointer--
+	case lexer.INCR:
+		s.cells[s.pointer]++
+	case lexer.DECR:
+		s.cells[s.pointer]--
+	case lexer.WRITE:
+		fmt.Print(string(s.cells[s.pointer]))
+	case lexer.READ:
+		fmt.Scan(&s.cells[s.pointer])
+	case lexer.LOOP:
+		for s.cells[s.pointer] != 0 {
+			for _, child := range node.Children {
+				s.run(child)
+			}
+		}
+	default:
+		panic("UNKNOWN TOKEN WHEN PARSING")
 	}
 }
 
 func isInRange(i int) bool {
-	return 0 <= i && i < maxCell
+	return 0 <= i && i < cellMax
 }

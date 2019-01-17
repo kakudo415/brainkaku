@@ -5,8 +5,8 @@ import (
 	"io/ioutil"
 	"os"
 
-	"./codegen"
 	"./lexer"
+	"./parser"
 	"./run"
 )
 
@@ -20,11 +20,12 @@ func main() {
 	}
 
 	ts := lexer.Lexer(input)
+	root := parser.Parser(ts)
 
 	switch os.Args[1] {
 	case "run":
-		run.Run(ts)
-	case "make":
-		fmt.Print(codegen.Gen(ts))
+		run.Run(root)
+		// case "make":
+		// 	codegen.Gen(root)
 	}
 }
