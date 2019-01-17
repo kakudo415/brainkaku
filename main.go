@@ -5,6 +5,7 @@ import (
 	"io/ioutil"
 	"os"
 
+	"./codegen"
 	"./lexer"
 	"./parser"
 	"./run"
@@ -25,7 +26,7 @@ func main() {
 	switch os.Args[1] {
 	case "run":
 		run.Run(root)
-		// case "make":
-		// 	codegen.Gen(root)
+	case "make":
+		codegen.Gen(root)
 	}
 }

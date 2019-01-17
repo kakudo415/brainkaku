@@ -12,6 +12,7 @@ const cellMax = 30000
 type status struct {
 	cells   []byte
 	pointer int
+	buffer  string
 }
 
 // Run command
@@ -41,7 +42,20 @@ func (s *status) run(node *parser.Node) {
 	case lexer.WRITE:
 		fmt.Print(string(s.cells[s.pointer]))
 	case lexer.READ:
-		fmt.Scan(&s.cells[s.pointer])
+		if len(s.buffer) == 0 {
+			var buffer string
+			fmt.Scanln(&buffer)
+			s.buffer += buffer
+		}
+		if len(s.buffer) > 0 {
+			rb := []rune(s.buffer)
+			s.cells[s.pointer] = byte(rb[0])
+			if len(s.buffer) > 1 {
+				s.buffer = string(rb[1:])
+			} else {
+				s.buffer = ""
+			}
+		}
 	case lexer.LOOP:
 		for s.cells[s.pointer] != 0 {
 			for _, child := range node.Children {
